@@ -1,0 +1,11 @@
+version: '3'
+
+services:
+  oma-website:
+    image: oma-website
+
+    build:
+      dockerfile: ./Dockerfile
+    restart: always
+    ports:
+      - "80:80"
