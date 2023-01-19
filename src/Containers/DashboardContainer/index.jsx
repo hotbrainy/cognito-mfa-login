@@ -3,7 +3,6 @@ import { useState, useEffect } from 'react';
 import { Auth } from 'aws-amplify';
 import { RouteComponentProps, withRouter } from 'react-router';
 import { Layout, Menu, Icon, notification } from 'antd';
-import { ClickParam } from 'antd/lib/menu';
 
 const DashBoardContainer = props => {
   

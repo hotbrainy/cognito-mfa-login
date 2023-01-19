@@ -1,8 +1,8 @@
 version: '3'
 
 services:
-  oma-website:
-    image: oma-website
+  mfa:
+    image: ui
 
     build:
       dockerfile: ./Dockerfile

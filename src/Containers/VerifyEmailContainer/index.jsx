@@ -123,7 +123,7 @@ class ConfirmEmailContainer extends React.Component {
         <EmailConfirmFormWrapper onSubmit={this.handleSubmit}>
           <Col md={24} lg={18}>
             <div className="full-width">
-              <h2>Check your email</h2>
+              <h2>Check your SMS</h2>
               <p>We've sent a six­ digit confirmation code</p>
             </div>
             <Form.Item validateStatus={error && 'error'} help={error} label="Confirmation Code">
@@ -139,7 +139,7 @@ class ConfirmEmailContainer extends React.Component {
           </Col>
           <Col md={24} lg={12}>
             <Button type="primary" disabled={loading} htmlType="submit" size="large">
-              {loading ? <Spin indicator={<Icon type="loading" style={{ fontSize: 24 }} spin />} /> : 'Confirm Email'}
+              {loading ? <Spin indicator={<Icon type="loading" style={{ fontSize: 24 }} spin />} /> : 'Confirm SMS'}
             </Button>
           </Col>
         </EmailConfirmFormWrapper>

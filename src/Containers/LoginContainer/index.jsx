@@ -1,13 +1,12 @@
-import * as React from 'react';
+import React, {useState, useEffect} from 'react';
 import { Redirect, Link, RouteComponentProps } from 'react-router-dom';
-import Amplify from 'aws-amplify'
-import Auth from '@aws-amplify/auth'
+import { Amplify, Auth } from 'aws-amplify';
+// import Auth from '@aws-amplify/auth'
 import { Form, Icon, Spin, Input, Button, notification, Col, Row } from 'antd';
 import UserPoolData from '../../Assets/config';
 import QRCode from 'qrcode.react'
 import FormWrapper from '../../Components/FormWrapper';
-
-
+ 
 const QR = require('qrcode');
 
 Amplify.configure({
@@ -21,29 +20,29 @@ Amplify.configure({
 
 
 
-class LoginContainer extends React.Component{
-  state = {
-    loading: false,
-    QRCode: "",
-    showQRCode: false,
-    cognitoUser: {},
-    redirect: false,
-  };
+const LoginContainer = props=>{
+
+  const [loading, setLoading] = useState(false);
+  const [QRCode, setQRCode] = useState("");
+  const [showQRCode, setShowQRCode] = useState(false);
+  const [cognitoUser, setCognitoUser] = useState({});
+  const [redirect, setRedirect] = useState(false);
 
 
-  handleSubmitMFA = (event) => {
+
+  const handleSubmitMFA = (event) => {
     event.preventDefault();
-    this.props.form.validateFields(async (err, values) => {
+    props.form.validateFields(async (err, values) => {
       try{
         if (!err) {
           let { token } = values;
-          this.setState({...this.state, loading: true });
-          console.log(this.state)
+          setLoading( true );
           var user
-          if(this.state.cognitoUser.challengeName !=="SOFTWARE_TOKEN_MFA"){
-            user = await Auth.verifyTotpToken(this.state.cognitoUser, token);
+          if(cognitoUser.challengeName !== 'SMS_MFA' ||
+            cognitoUser.challengeName !== 'SOFTWARE_TOKEN_MFA'){
+            user = await Auth.verifyTotpToken(cognitoUser, token);
           }else{
-            user = await Auth.confirmSignIn(this.state.cognitoUser, token, "SOFTWARE_TOKEN_MFA")
+            user = await Auth.confirmSignIn(cognitoUser, token)
           }
           if (user) {
             notification.success({
@@ -52,7 +51,7 @@ class LoginContainer extends React.Component{
               placement: 'topRight',
               duration: 1.5,
               onClose: () => {
-                this.setState({...this.state, redirect: true });
+                setRedirect( true );
               }
             });
           }
@@ -60,44 +59,60 @@ class LoginContainer extends React.Component{
       }
       catch(e){
         console.log(e)
-        this.setState({...this.state, message:e.message, loading:false})        
+        setLoading(false)        
       }
     });
   }
-  handleSubmit = (event) => {
+  const handleSubmit = (event) => {
     event.preventDefault();
-    this.props.form.validateFields(async (err, values) => {
+    props.form.validateFields(async (err, values) => {
       try{
 
         if (!err) {
           let { username, password } = values;
-
-          this.setState({...this.state, loading: true });
+          setLoading( true );
           const user = await Auth.signIn(username, password);
-          this.setState({...this.state, cognitoUser: user });
+          // setCognitoUser( user );
+
           if (user.challengeName === 'MFA_SETUP') {
             const res = await Auth.setupTOTP(user);
             const authCode = "otpauth://totp/AWSCognito:" + user.username + "?secret=" + res + "&issuer=Cognito";
-            this.setState({...this.state, QRCode: authCode, showQRCode: true, loading: false });
-          } else if (user.challengeName === 'SOFTWARE_TOKEN_MFA') {
-            this.setState({...this.state, showQRCode: true, loading: false });
+            setQRCode(authCode);
+            setShowQRCode(true);
+            setLoading(false)
+          } else if (user.challengeName === 'SMS_MFA' ||
+            user.challengeName === 'SOFTWARE_TOKEN_MFA') {
+            const code = prompt();
+            const u = await Auth.confirmSignIn(user, code);
+            if (u) {
+            notification.success({
+              message: 'Succesfully logged in user!',
+              description: 'Logged in successfully, Redirecting you in a few!',
+              placement: 'topRight',
+              duration: 1.5,
+              onClose: () => {
+                setRedirect(true)
+              }
+            });
+            return;
+          }
+            setShowQRCode(true)
+            setLoading(false);
           }
         }
       }catch(e){
-        this.setState({...this.state, message:e.message, loading:false})        
+        setLoading(false)
       }
     });
   };
 
-  render() {
-    const { getFieldDecorator } = this.props.form;
-    const { loading, cognitoUser, redirect } = this.state;
+    const { getFieldDecorator } = props.form;
 
     return (
       <React.Fragment>
 
-        {!this.state.showQRCode && (
-          <FormWrapper onSubmit={this.handleSubmit} className="login-form">
+        {!showQRCode && (
+          <FormWrapper onSubmit={handleSubmit} className="login-form">
             <Form.Item>
               {getFieldDecorator('username', {
                 rules: [
@@ -146,11 +161,10 @@ class LoginContainer extends React.Component{
             </Form.Item>
           </FormWrapper>
         )}
-        {this.state.showQRCode && (
-          <FormWrapper onSubmit={(event) => this.handleSubmitMFA(event)} className="login-form">
-            {/* <img src={this.state.QRCode} /> */}
-            <QRCode value={this.state.QRCode} />
-            {this.state.QRCode}
+        {showQRCode && (
+          <FormWrapper onSubmit={(event) => handleSubmitMFA(event)} className="login-form">
+            {/* <img src={QRCode} />
+            <QRCode value={QRCode} />*/}
             <Form.Item>
               {getFieldDecorator('token', {
                 rules: [
@@ -160,7 +174,9 @@ class LoginContainer extends React.Component{
                   }
                 ]
               })(
-                <Input prefix={<Icon type="user" style={{ color: "#000000" }} />} placeholder="Token" />
+                <Input 
+                type="number"
+                 prefix={<Icon type="user" style={{ color: "#000000" }} />} placeholder="Token" />
               )}
             </Form.Item>
             <Form.Item className="text-center">
@@ -182,7 +198,6 @@ class LoginContainer extends React.Component{
         {redirect && <Redirect to={{ pathname: '/dashboard' }} />}
       </React.Fragment>
     );
-  }
 }
 
 export default Form.create()(LoginContainer);
