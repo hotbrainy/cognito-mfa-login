@@ -17,7 +17,7 @@ const LoginContainer = props=>{
   const [loading, setLoading] = useState(false);
   const [QRCode, setQRCode] = useState("");
   const [showQRCode, setShowQRCode] = useState(false);
-  // const [cognitoUser, setCognitoUser] = useState({});
+  const [cognitoUser, setCognitoUser] = useState({});
   const [redirect, setRedirect] = useState(false);
 
   // in useEffect, we create the listener
