@@ -55,6 +55,8 @@ class SignUpContainer extends React.Component {
           duration: 1.5
         });
         break;
+      default:
+        break;
     }
   };
 

@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useState, useEffect } from 'react';
 import { Auth } from 'aws-amplify';
-import { RouteComponentProps, withRouter } from 'react-router';
+import { withRouter } from 'react-router';
 import { Layout, Menu, Icon, notification } from 'antd';
 
 const DashBoardContainer = props => {

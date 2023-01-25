@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Redirect, RouteComponentProps } from 'react-router-dom';
+import { Redirect } from 'react-router-dom';
 import { Spin, Icon, Button, Form, notification, Input, Col } from 'antd';
 
 // amplify
@@ -77,6 +77,8 @@ class ConfirmEmailContainer extends React.Component {
           placement: 'topRight',
           duration: 1.5
         });
+        break;
+      default:
         break;
     }
   };
