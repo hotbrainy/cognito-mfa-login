@@ -15,13 +15,14 @@ import FormWrapper from '../../Components/FormWrapper';
 const LoginContainer = props=>{
 
   const [loading, setLoading] = useState(false);
-  // const [QRCode, setQRCode] = useState("");
+  const [QRCode, setQRCode] = useState("");
   const [showQRCode, setShowQRCode] = useState(false);
   // const [cognitoUser, setCognitoUser] = useState({});
   const [redirect, setRedirect] = useState(false);
 
   // in useEffect, we create the listener
   useEffect(() => {
+    console.log(QRCode)
     Hub.listen('auth', (data) => {
       const { payload } = data
       console.log('A new auth event has happened: ', data)
