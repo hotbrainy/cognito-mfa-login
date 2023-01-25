@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import { Redirect, Link } from 'react-router-dom';
 import { Amplify, Auth, Hub } from 'aws-amplify';
 // import Auth from '@aws-amplify/auth'
