@@ -1,23 +1,23 @@
 import React, {useState, useEffect} from 'react';
 import { Redirect, Link } from 'react-router-dom';
-import { Amplify, Auth, Hub } from 'aws-amplify';
+import { Auth, Hub } from 'aws-amplify';
 // import Auth from '@aws-amplify/auth'
 
-import { CognitoHostedUIIdentityProvider } from '@aws-amplify/auth';
+// import { CognitoHostedUIIdentityProvider } from '@aws-amplify/auth';
 import { Form, Icon, Spin, Input, Button, notification, Col, Row } from 'antd';
-import UserPoolData from '../../Assets/config';
+// import UserPoolData from '../../Assets/config';
 // import QRCode from 'qrcode.react'
 import FormWrapper from '../../Components/FormWrapper';
-import { GoogleLogin, useGoogleLogin } from '@react-oauth/google';
+// import { GoogleLogin, useGoogleLogin } from '@react-oauth/google';
 // const QR = require('qrcode');
 
 
 const LoginContainer = props=>{
 
   const [loading, setLoading] = useState(false);
-  const [QRCode, setQRCode] = useState("");
+  // const [QRCode, setQRCode] = useState("");
   const [showQRCode, setShowQRCode] = useState(false);
-  const [cognitoUser, setCognitoUser] = useState({});
+  // const [cognitoUser, setCognitoUser] = useState({});
   const [redirect, setRedirect] = useState(false);
 
   // in useEffect, we create the listener
@@ -42,11 +42,11 @@ const LoginContainer = props=>{
       .catch(err => console.log(err));
   }
 
-  function signOut() {
-    Auth.signOut()
-      .then(data => console.log(data))
-      .catch(err => console.log(err));
-  }
+  // function signOut() {
+  //   Auth.signOut()
+  //     .then(data => console.log(data))
+  //     .catch(err => console.log(err));
+  // }
 
   const handleSubmitMFA = (event) => {
     event.preventDefault();
@@ -56,12 +56,12 @@ const LoginContainer = props=>{
           let { token } = values;
           setLoading( true );
           var user
-          if(cognitoUser.challengeName !== 'SMS_MFA' ||
-            cognitoUser.challengeName !== 'SOFTWARE_TOKEN_MFA'){
-            user = await Auth.verifyTotpToken(cognitoUser, token);
-          }else{
-            user = await Auth.confirmSignIn(cognitoUser, token)
-          }
+          // if(cognitoUser.challengeName !== 'SMS_MFA' ||
+          //   cognitoUser.challengeName !== 'SOFTWARE_TOKEN_MFA'){
+          //   user = await Auth.verifyTotpToken(cognitoUser, token);
+          // }else{
+          //   user = await Auth.confirmSignIn(cognitoUser, token)
+          // }
           if (user) {
             notification.success({
               message: 'Succesfully logged in user!',
