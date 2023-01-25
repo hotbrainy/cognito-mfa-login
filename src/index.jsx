@@ -2,8 +2,6 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
 import App from './App';
-import * as serviceWorker from './serviceWorker';
-import { GlobalStyles } from './global';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 ReactDOM.render(
   <>
