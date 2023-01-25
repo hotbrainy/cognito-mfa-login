@@ -4,11 +4,13 @@ import './index.css';
 import App from './App';
 import * as serviceWorker from './serviceWorker';
 import { GlobalStyles } from './global';
-
+import { GoogleOAuthProvider } from '@react-oauth/google';
 ReactDOM.render(
   <>
-    <GlobalStyles />
-    <App />
+    <GoogleOAuthProvider clientId="247778479085-pl9e0beo95bfncauto4isrnq6fgkqq4g.apps.googleusercontent.com">
+      <GlobalStyles />
+      <App />
+    </GoogleOAuthProvider>
   </>,
   document.getElementById('root')
 );

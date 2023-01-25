@@ -14,14 +14,14 @@ const DashBoardContainer = props => {
   
   async function get_user_data() {
     let cart = await Auth.currentSession();
-    setData(cart.getIdToken().payload['name']);
+    setData(cart.getIdToken().payload['email']);
 }
   
   const [collapsed, setCollapsed] = React.useState(false);
   const handleLogout = async (event) => {
     const { history } = props;
     try {
-      await Auth.signOut({ global: true }).then(() => {
+      await Auth.signOut(/*{ global: true }*/).then(() => {
         history.push('/login');
       });
     } catch (err) {

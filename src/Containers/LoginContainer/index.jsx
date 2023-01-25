@@ -1,23 +1,15 @@
 import React, {useState, useEffect} from 'react';
 import { Redirect, Link, RouteComponentProps } from 'react-router-dom';
-import { Amplify, Auth } from 'aws-amplify';
+import { Amplify, Auth, Hub } from 'aws-amplify';
 // import Auth from '@aws-amplify/auth'
+
+import { CognitoHostedUIIdentityProvider } from '@aws-amplify/auth';
 import { Form, Icon, Spin, Input, Button, notification, Col, Row } from 'antd';
 import UserPoolData from '../../Assets/config';
 import QRCode from 'qrcode.react'
 import FormWrapper from '../../Components/FormWrapper';
- 
+import { GoogleLogin, useGoogleLogin } from '@react-oauth/google';
 const QR = require('qrcode');
-
-Amplify.configure({
-  Auth: {
-    userPoolWebClientId: UserPoolData.clientId,
-    userPoolId: UserPoolData.userPoolId,
-    region: UserPoolData.region,
-  }
-})
-
-
 
 
 const LoginContainer = props=>{
@@ -28,7 +20,33 @@ const LoginContainer = props=>{
   const [cognitoUser, setCognitoUser] = useState({});
   const [redirect, setRedirect] = useState(false);
 
+  // in useEffect, we create the listener
+  useEffect(() => {
+    Hub.listen('auth', (data) => {
+      const { payload } = data
+      console.log('A new auth event has happened: ', data)
+       if (payload.event === 'signIn') {
+         console.log('a user has signed in!')
+         checkUser();
+         setRedirect( true );
+       }
+       if (payload.event === 'signOut') {
+         console.log('a user has signed out!')
+       }
+    })
+  }, [])
 
+  function checkUser() {
+    Auth.currentAuthenticatedUser()
+      .then(user => console.log({ user }))
+      .catch(err => console.log(err));
+  }
+
+  function signOut() {
+    Auth.signOut()
+      .then(data => console.log(data))
+      .catch(err => console.log(err));
+  }
 
   const handleSubmitMFA = (event) => {
     event.preventDefault();
@@ -73,6 +91,7 @@ const LoginContainer = props=>{
           setLoading( true );
           const user = await Auth.signIn(username, password);
           // setCognitoUser( user );
+          console.log(user)
 
           if (user.challengeName === 'MFA_SETUP') {
             const res = await Auth.setupTOTP(user);
@@ -82,7 +101,7 @@ const LoginContainer = props=>{
             setLoading(false)
           } else if (user.challengeName === 'SMS_MFA' ||
             user.challengeName === 'SOFTWARE_TOKEN_MFA') {
-            const code = prompt();
+            const code = prompt("Please enter SMS code");
             const u = await Auth.confirmSignIn(user, code);
             if (u) {
             notification.success({
@@ -105,99 +124,131 @@ const LoginContainer = props=>{
       }
     });
   };
+  const { getFieldDecorator } = props.form;
 
-    const { getFieldDecorator } = props.form;
+  return (
+    <React.Fragment>
 
-    return (
-      <React.Fragment>
+      {!showQRCode && (
+        <FormWrapper onSubmit={handleSubmit} className="login-form">
+          <Form.Item>
+            {getFieldDecorator('username', {
+              rules: [
+                {
+                  required: true,
+                  message: 'Please input your username!'
+                }
+              ]
+            })(
+              <Input prefix={<Icon type="user" style={{ color: "#000000" }} />} placeholder="Username" />
+            )}
+          </Form.Item>
+          <Form.Item>
+            {getFieldDecorator('password', {
+              rules: [
+                {
+                  required: true,
+                  message: 'Please input your password!'
+                }
+              ]
+            })(
+              <Input
+                prefix={<Icon type="lock" style={{ color: '#000000' }} />}
+                type="password"
+                placeholder="Password"
+              />
+            )}
+          </Form.Item>
+          <Form.Item className="text-center">
+            <Row type="flex" gutter={16}>
+              <Col lg={24}>
+                <Button
+                  style={{ width: '100%' }}
+                  type="primary"
+                  disabled={loading}
+                  htmlType="submit"
+                  className="login-form-button"
+                >
+                  {loading ? <Spin indicator={<Icon type="loading" style={{ fontSize: 24 }} spin />} /> : 'Log in'}
+                </Button>
+              </Col>
+              <Col lg={24}>
+                Or <Link to="/signup">register now!</Link>
+              </Col>
+            </Row>
+          </Form.Item>
 
-        {!showQRCode && (
-          <FormWrapper onSubmit={handleSubmit} className="login-form">
-            <Form.Item>
-              {getFieldDecorator('username', {
-                rules: [
-                  {
-                    required: true,
-                    message: 'Please input your username!'
-                  }
-                ]
-              })(
-                <Input prefix={<Icon type="user" style={{ color: "#000000" }} />} placeholder="Username" />
-              )}
-            </Form.Item>
-            <Form.Item>
-              {getFieldDecorator('password', {
-                rules: [
-                  {
-                    required: true,
-                    message: 'Please input your password!'
-                  }
-                ]
-              })(
-                <Input
-                  prefix={<Icon type="lock" style={{ color: '#000000' }} />}
-                  type="password"
-                  placeholder="Password"
+          {/*<Form.Item className="text-center">
+            <Row type="flex" gutter={16}>
+              <Col lg={24}>
+                <GoogleLogin
+                  onSuccess={googleSignInSuccess}
+                  onError={googleSignInFailure}
+                  text="Sign in with Google"
+                  context="Sign in with Google"
                 />
-              )}
-            </Form.Item>
-            <Form.Item className="text-center">
-              <Row type="flex" gutter={16}>
-                <Col lg={24}>
-                  <Button
-                    style={{ width: '100%' }}
-                    type="primary"
-                    disabled={loading}
-                    htmlType="submit"
-                    className="login-form-button"
-                  >
-                    {loading ? <Spin indicator={<Icon type="loading" style={{ fontSize: 24 }} spin />} /> : 'Log in'}
-                  </Button>
-                </Col>
-                <Col lg={24}>
-                  Or <Link to="/signup">register now!</Link>
-                </Col>
-              </Row>
-            </Form.Item>
-          </FormWrapper>
-        )}
-        {showQRCode && (
-          <FormWrapper onSubmit={(event) => handleSubmitMFA(event)} className="login-form">
-            {/* <img src={QRCode} />
-            <QRCode value={QRCode} />*/}
-            <Form.Item>
-              {getFieldDecorator('token', {
-                rules: [
-                  {
-                    required: true,
-                    message: 'Please input token!'
-                  }
-                ]
-              })(
-                <Input 
-                type="number"
-                 prefix={<Icon type="user" style={{ color: "#000000" }} />} placeholder="Token" />
-              )}
-            </Form.Item>
-            <Form.Item className="text-center">
-              <Row type="flex" gutter={16}>
-                <Col lg={24}>
-                  <Button
-                    style={{ width: '100%' }}
-                    type="primary"
-                    disabled={loading}
-                    htmlType="submit"
-                    className="login-form-button"
-                  >
-                    {loading ? <Spin indicator={<Icon type="loading" style={{ fontSize: 24 }} spin />} /> : 'Log in'}
-                  </Button>
-                </Col>
-              </Row>
-            </Form.Item>
-          </FormWrapper>)}
-        {redirect && <Redirect to={{ pathname: '/dashboard' }} />}
-      </React.Fragment>
-    );
+              </Col>
+            </Row>
+          </Form.Item>*/}
+          <Form.Item className="text-center">
+            <Row type="flex" gutter={16}>
+              <Col lg={24}>
+              <Button
+                  style={{ width: '100%' }}
+                  type="primary"
+                  onClick={() => Auth.federatedSignIn({provider: 'Google'})}
+                >
+                  Log in With Google
+                </Button>
+              </Col>
+            </Row>
+          </Form.Item>
+        </FormWrapper>
+      )}
+     {/* <Button onClick={() => Auth.federatedSignIn()}>Sign In</Button>
+      <Button onClick={checkUser}>Check User</Button>
+      <Button onClick={signOut}>Sign Out</Button>
+      <Button onClick={() => Auth.federatedSignIn({provider: 'Facebook'})}>Sign In with Facebook</Button>
+      <Button onClick={() => Auth.federatedSignIn({provider: 'Google'})}>Sign In with Google</Button>
+      */}
+      {showQRCode && (
+        <FormWrapper onSubmit={(event) => handleSubmitMFA(event)} className="login-form">
+          {/* <img src={QRCode} />
+          <QRCode value={QRCode} />*/}
+          <Form.Item>
+            {getFieldDecorator('token', {
+              rules: [
+                {
+                  required: true,
+                  message: 'Please input token!'
+                }
+              ]
+            })(
+              <Input 
+              type="number"
+               prefix={<Icon type="user" style={{ color: "#000000" }} />} placeholder="Token" />
+            )}
+          </Form.Item>
+          <Form.Item className="text-center">
+            <Row type="flex" gutter={16}>
+              <Col lg={24}>
+                <Button
+                  style={{ width: '100%' }}
+                  type="primary"
+                  disabled={loading}
+                  htmlType="submit"
+                  className="login-form-button"
+                >
+                  {loading ? <Spin indicator={<Icon type="loading" style={{ fontSize: 24 }} spin />} /> : 'Log in'}
+                </Button>
+              </Col>
+            </Row>
+          </Form.Item>
+
+        </FormWrapper>)}
+      {redirect && <Redirect to={{ pathname: '/dashboard' }} />}
+    </React.Fragment>
+  );
 }
 
 export default Form.create()(LoginContainer);
