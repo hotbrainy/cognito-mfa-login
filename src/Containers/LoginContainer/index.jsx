@@ -22,7 +22,6 @@ const LoginContainer = props=>{
 
   // in useEffect, we create the listener
   useEffect(() => {
-    console.log(QRCode)
     Hub.listen('auth', (data) => {
       const { payload } = data
       console.log('A new auth event has happened: ', data)
@@ -93,6 +92,7 @@ const LoginContainer = props=>{
           const user = await Auth.signIn(username, password);
           // setCognitoUser( user );
           console.log(user)
+          console.log(QRCode)
 
           if (user.challengeName === 'MFA_SETUP') {
             const res = await Auth.setupTOTP(user);
